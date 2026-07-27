@@ -37,12 +37,7 @@ module.exports = function (runtime, scope) {
                 Math.floor(device.width * 0.6), Math.floor(device.height * 0.6)
             ]
         },
-        "jiaoshui_close": {
-            region: [
-                Math.floor(device.width * 0.4), Math.floor(device.height * 0.5),
-                Math.floor(device.width * 0.5), Math.floor(device.height * 0.4)
-            ]
-        },
+        "jiaoshui_close": {},
         "jiaoshui_feiliao": {
             region: [
                 Math.floor(device.width * 0.2), Math.floor(device.height * 0.2),

@@ -70,7 +70,7 @@ module.exports = function (runtime, scope) {
             randomSleep(1000, null, 800);
         }
         //关闭浇水时的弹框
-        iconFindClick("jiaoshui_close");
+        iconFindClick("jiaoshui_close", {region: [Math.floor(device.width * 0.4), Math.floor(device.height * 0.5), Math.floor(device.width * 0.5), Math.floor(device.height * 0.4)]});
         // 第二次检查（如果当天还没处理过才需要）
         if (!guangFoundHasDoneToday) {
             guangFound = ocrFindClick("逛精选商品");
@@ -572,7 +572,7 @@ module.exports = function (runtime, scope) {
             if (hasFloatWin) {
                 randomSleep(800, null, 600);
             }
-            hasFloatWin = iconFindClick("jiaoshui_close", {threshold: 0.7, region: null});
+            hasFloatWin = iconFindClick("jiaoshui_close", {threshold: 0.7});
             if (hasFloatWin) {
                 randomSleep(800, null, 600);
             }

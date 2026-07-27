@@ -148,7 +148,7 @@ module.exports = function (runtime, scope) {
                 openType: 'goToOtherApp',
                 offset: {x: 40, y: 1},
                 noScroll: true,
-                checkAfterMs: 30,
+                checkAfterSeconds: 30,
                 checkTextRegion: [Math.floor(device.width * 0.6), Math.floor(device.height * 0.6), Math.floor(device.width * 0.4), Math.floor(device.height * 0.3)],
                 checkText: "任务完成",
             },
