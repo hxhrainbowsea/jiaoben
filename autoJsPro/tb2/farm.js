@@ -644,7 +644,7 @@ module.exports = function (runtime, scope) {
             click = ocrFindClick("领阳光");
             if (click) {
                 randomSleep(800, null, 600);
-                click = ocrFindClick("每日签到");
+                click = ocrFindClick("来阳光农场");
                 if (click) {
                     randomSleep(3000, null, 2800);
                 }
