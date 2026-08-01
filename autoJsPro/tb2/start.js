@@ -549,6 +549,7 @@ function handleXiaoxiaoleTask() {
     log("点击关闭弹窗...");
     for (var ci = 0; ci < 5; ci++) {
         iconFindClick("jiaoshui_close");
+        iconFindClick("xiaoxiaole_close");
         randomSleep(1000, null, 700);
     }
 
