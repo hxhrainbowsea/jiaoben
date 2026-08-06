@@ -89,10 +89,11 @@ module.exports = function (runtime, scope) {
     /**
      * 浇水施肥（主入口）
      *
-     * 三种模式：
-     *   auto   = 浇水至所有奖励领完
-     *   count  = 固定浇水指定次数
-     *   target = 浇水至目标次数（默认 204 次）
+     * 四种模式：
+     *   auto      = 浇水至所有奖励领完
+     *   count     = 固定浇水指定次数
+     *   target    = 浇水至目标次数（默认 204 次）
+     *   fertilizer = 用完所有肥料
      */
     scope.jiaoshui = function () {
         // 先进入农场页面（所有模式都需要）
@@ -164,6 +165,8 @@ module.exports = function (runtime, scope) {
                     log("【浇水】当前 " + _confirmCount + " 次，未达目标，继续第 " + (_retry + 2) + " 轮");
                 }
             }
+        } else if (_waterMode === "fertilizer") {
+            jiaoshuiAllFertilizer();
         } else {
             // 自动模式：多次确认，奖励全部领完才结束（最多 5 轮）
             for (var _retry = 0; _retry < 5; _retry++) {
@@ -193,6 +196,7 @@ module.exports = function (runtime, scope) {
         var maxAttempts = 30;
         var beforeFertForCheck = -1;  // 3轮前记录的肥料值
         var c = 0;
+        var _shifeiRetryAuto = 0;
         for (var i = 0; i < maxAttempts; i++) {
             c++;
             // 每3轮：先校验3轮前记录的值，再记录当前值供3轮后用
@@ -217,6 +221,11 @@ module.exports = function (runtime, scope) {
             }
             //施肥进入下一轮（会自动浇水5次）
             if (!iconFindClick("shifei")) {
+                _shifeiRetryAuto++;
+                if (_shifeiRetryAuto >= 5) {
+                    log("【施肥】连续失败5次，跳出循环");
+                    break;
+                }
                 log("【施肥】失败，重试");
                 randomSleep(1500, null, 1000);
                 i--;
@@ -470,6 +479,7 @@ module.exports = function (runtime, scope) {
             iconFindClick("jiaoshui5");
             randomSleep(500, null, 400);
 
+            var _shifeiRetry1 = 0;
             for (var i = 0; i < oneTimeCount; i++) {
                 c++;
                 // 每3轮：先校验3轮前记录的值，再记录当前值供3轮后用
@@ -488,6 +498,12 @@ module.exports = function (runtime, scope) {
 
                 handleWaterRoutine();
                 if (!iconFindClick("shifei")) {
+                    _shifeiRetry1++;
+                    if (_shifeiRetry1 >= 5) {
+                        log("【施肥】连续失败5次，终止浇水");
+                        aborted = true;
+                        break;
+                    }
                     log("【施肥】失败，重试");
                     randomSleep(1500, null, 1000);
                     i--;
@@ -510,6 +526,7 @@ module.exports = function (runtime, scope) {
             // 入口 jiaoshui() 已初始化理论值，直接使用（省一次重复OCR）
             var estimatedFertilizer = _fertilizerTheoretical >= 0 ? _fertilizerTheoretical : scope.getFertilizerCount();
 
+            var _shifeiRetry5 = 0;
             for (var i = 0; i < fiveTimeCount; i++) {
                 c++;
                 // 每3轮：先校验3轮前记录的值，再记录当前值供3轮后用
@@ -538,6 +555,12 @@ module.exports = function (runtime, scope) {
 
                 handleWaterRoutine();
                 if (!iconFindClick("shifei")) {
+                    _shifeiRetry5++;
+                    if (_shifeiRetry5 >= 5) {
+                        log("【施肥】连续失败5次，终止浇水");
+                        aborted = true;
+                        break;
+                    }
                     log("【施肥】失败，重试");
                     randomSleep(1500, null, 1000);
                     i--;
@@ -558,6 +581,81 @@ module.exports = function (runtime, scope) {
             log("【目标浇水】完成，已达 " + target + " 次");
         }
         return !aborted;
+    };
+
+    /**
+     * 耗尽所有肥料（用完即止）
+     *
+     * 逻辑：
+     *   1. 肥料 >= 3000（5次）→ 勾选浇水5次，循环浇水
+     *   2. 肥料 < 3000 → 切为单次浇水
+     *   3. 肥料 < 600（1次）→ 停止
+     *
+     * 每3轮校验肥料消耗，连续施肥失败5次则终止。
+     */
+    scope.jiaoshuiAllFertilizer = function () {
+        log("【耗尽肥料】模式：用完所有肥料");
+        scope.resetFertilizerTracking();
+
+        // 初始判断：用5次档还是1次档
+        var fertCount = scope.getFertilizerCount();
+        var useFiveMode = fertCount >= 5 * 600;
+        if (useFiveMode) {
+            log("【耗尽肥料】肥料=" + fertCount + "，先使用5次档");
+            iconFindClick("jiaoshui1");
+        } else {
+            log("【耗尽肥料】肥料=" + fertCount + "，使用1次档");
+            iconFindClick("jiaoshui5");
+        }
+        randomSleep(500, null, 400);
+
+        var _shifeiRetryF = 0;
+        var c = 0;
+        var beforeFertForCheck = -1;
+
+        for (var round = 0; round < 100; round++) {
+            fertCount = scope.getFertilizerCount();
+
+            // 肥料不够1次，结束
+            if (fertCount >= 0 && fertCount < 600) {
+                log("【耗尽肥料】肥料=" + fertCount + " < 600，肥料已用完");
+                break;
+            }
+
+            // 检查是否需要从5次档切换到1次档
+            if (useFiveMode && fertCount >= 0 && fertCount < 5 * 600) {
+                log("【耗尽肥料】肥料=" + fertCount + " < 3000，切换为1次档");
+                iconFindClick("jiaoshui5");
+                randomSleep(500, null, 400);
+                useFiveMode = false;
+            }
+
+            c++;
+            // 每3轮校验肥料消耗
+            if (c > 0 && c % 3 === 0) {
+                if (c > 3 && beforeFertForCheck >= 0 && !scope.checkFertilizerConsumed(beforeFertForCheck)) {
+                    break;
+                }
+                beforeFertForCheck = scope.getFertilizerCount();
+            }
+
+            handleWaterRoutine();
+            if (!iconFindClick("shifei")) {
+                _shifeiRetryF++;
+                if (_shifeiRetryF >= 5) {
+                    log("【施肥】连续失败5次，终止");
+                    break;
+                }
+                log("【施肥】失败，重试");
+                randomSleep(1500, null, 1000);
+                c--;
+                continue;
+            }
+            _shifeiRetryF = 0;
+            randomSleep(1200, null, 1000);
+            scope.consumeFertilizer(useFiveMode ? 5 * 600 : 600);
+        }
+        log("【耗尽肥料】完成");
     };
 
     /**

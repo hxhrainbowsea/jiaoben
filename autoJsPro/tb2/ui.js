@@ -132,6 +132,10 @@ ui.layout(
                                     <radio id="waterTargetRadio" />
                                     <text text="🎯  浇水至目标(204次)" textSize="13sp" textColor="#FF666666" layout_weight="1" />
                                 </horizontal>
+                                <horizontal gravity="center_vertical" margin="0 4 0 0" h="40" bg="#FFF5F5F5" padding="8 0">
+                                    <radio id="waterFertilizerRadio" />
+                                    <text text="🌱  用完所有肥料" textSize="13sp" textColor="#FF666666" layout_weight="1" />
+                                </horizontal>
                             </radiogroup>
                             <text id="waterModeTip" text="" textSize="11sp" textColor="#FFE53935" margin="8 0 0 4" />
                         </vertical>
@@ -460,6 +464,11 @@ function restoreUiState() {
             ui.waterAutoRadio.setChecked(false);
             ui.waterFixedRadio.setChecked(false);
             ui.waterTargetRadio.setChecked(true);
+        } else if (waterMode === "fertilizer") {
+            ui.waterAutoRadio.setChecked(false);
+            ui.waterFixedRadio.setChecked(false);
+            ui.waterTargetRadio.setChecked(false);
+            ui.waterFertilizerRadio.setChecked(true);
         }
 
         var waterNum = _uiStorage.get('waterNum');
@@ -515,7 +524,7 @@ function saveUiState() {
     _uiStorage.put('volume', ui.volumeSw.isChecked() ? "true" : "false");
     _uiStorage.put('killApp', JSON.stringify(getSelectedKillApps()));
     _uiStorage.put('ocrPure', ui.ocrSw.isChecked() ? "true" : "false");
-    _uiStorage.put('waterMode', ui.waterAutoRadio.isChecked() ? "auto" : ui.waterTargetRadio.isChecked() ? "target" : "count");
+    _uiStorage.put('waterMode', ui.waterAutoRadio.isChecked() ? "auto" : ui.waterTargetRadio.isChecked() ? "target" : ui.waterFertilizerRadio.isChecked() ? "fertilizer" : "count");
     _uiStorage.put('waterNum', ui.waterNumInput.getText() + "");
 
     _uiStorage.put('xxlLeft', ui.xxlLeft.getText() + "");
@@ -723,6 +732,13 @@ ui.waterFixedRadio.on("click", function () {
 ui.waterTargetRadio.on("click", function () {
     ui.waterAutoRadio.setChecked(false);
     ui.waterFixedRadio.setChecked(false);
+    ui.waterFertilizerRadio.setChecked(false);
+});
+
+ui.waterFertilizerRadio.on("click", function () {
+    ui.waterAutoRadio.setChecked(false);
+    ui.waterFixedRadio.setChecked(false);
+    ui.waterTargetRadio.setChecked(false);
 });
 
 // ============================================================
@@ -823,7 +839,7 @@ function buildXxlBoard() {
 // ============================================================
 
 function writeRunConfig(taskFlag) {
-    var waterMode = ui.waterAutoRadio.isChecked() ? "auto" : ui.waterTargetRadio.isChecked() ? "target" : "count";
+    var waterMode = ui.waterAutoRadio.isChecked() ? "auto" : ui.waterTargetRadio.isChecked() ? "target" : ui.waterFertilizerRadio.isChecked() ? "fertilizer" : "count";
     var waterNum = parseInt(ui.waterNumInput.getText()) || 10;
     var xxlBoard = buildXxlBoard();
     var helpNames = _helpStorage.get('selectedFriends', []);
