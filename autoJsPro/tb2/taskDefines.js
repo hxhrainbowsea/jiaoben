@@ -127,6 +127,14 @@ module.exports = function (runtime, scope) {
                 once: true
             },
             {
+                name: "浏览淘宝秒杀",
+                text: "浏览淘宝秒杀",
+                totalSeconds: 16,
+                openType: 'newPage',
+                offset: {x: 40, y: 1},
+                once: true
+            },
+            {
                 name: "去蚂蚁新村收木兰币",
                 text: "新村收木兰币",
                 totalSeconds: 6,
