@@ -100,7 +100,8 @@ module.exports = function (runtime, scope) {
                 totalSeconds: 16,
                 openType: 'newPage',
                 offset: {x: 40, y: 1},
-                once: true
+                once: true,
+                altTexts: ["去領60元"]
             },
             {
                 name: "点击3个商品",
