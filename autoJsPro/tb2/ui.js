@@ -936,13 +936,6 @@ function toggleTestXxlSection() {
 }
 ui.testXxlSectionHeader.on("click", function () { toggleTestXxlSection(); });
 
-var _testDdzCollapsed = true;
-function toggleTestDdzSection() {
-    _testDdzCollapsed = !_testDdzCollapsed;
-    ui.testDdzSectionBody.setVisibility(_testDdzCollapsed ? android.view.View.GONE : android.view.View.VISIBLE);
-    ui.testDdzSectionArrow.setText(_testDdzCollapsed ? "▶" : "▼");
-}
-ui.testDdzSectionHeader.on("click", function () { toggleTestDdzSection(); });
 
 // ============================================================
 // 执行完毕强退 App（多选 + 折叠展开）
