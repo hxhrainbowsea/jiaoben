@@ -120,6 +120,14 @@ module.exports = function (runtime, scope) {
                 once: true
             },
             {
+                name: "去美团短视频领现金",
+                text: "去美团短视频",
+                totalSeconds: 6,
+                openType: 'goToOtherApp',
+                offset: {x: 40, y: 1},
+                once: true
+            },
+            {
                 name: "去玩支付宝蚂蚁庄园",
                 text: "支付宝蚂",
                 totalSeconds: 6,
