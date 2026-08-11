@@ -96,12 +96,11 @@ module.exports = function (runtime, scope) {
             {name: "去签到", text: "去签到", openType: 'none', once: true},
             {
                 name: "去领60元广告",
-                text: "去领60元",
+                text: "60元红包",
                 totalSeconds: 16,
                 openType: 'newPage',
                 offset: {x: 40, y: 1},
                 once: true,
-                altTexts: ["去領60元"]
             },
             {
                 name: "点击3个商品",
@@ -207,7 +206,7 @@ module.exports = function (runtime, scope) {
                 once: true,
                 noScroll: true
             },
-            {name: "农场百科答题", text: "去答题", openType: 'farmQuiz', once: true},
+            {name: "农场百科答题", text: "答题", openType: 'farmQuiz', once: true},
             {
                 name: "玩消消乐得肥料",
                 text: "玩消消乐",
