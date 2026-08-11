@@ -56,7 +56,7 @@ module.exports = function (runtime, scope) {
 
         // ---- 施肥 ----
         "shifei": {
-            dy: 200,
+            dy: 20,
             threshold: 0.78,
             region: [
                 Math.floor(device.width * 0.2), Math.floor(device.height * 0.2),
