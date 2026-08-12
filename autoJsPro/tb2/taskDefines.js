@@ -206,7 +206,7 @@ module.exports = function (runtime, scope) {
                 once: true,
                 noScroll: true
             },
-            {name: "农场百科答题", text: "答题", openType: 'farmQuiz', once: true},
+            {name: "农场百科答题", text: "答题", openType: 'farmQuiz', once: true, altTexts: ["问答"]},
             {
                 name: "玩消消乐得肥料",
                 text: "玩消消乐",
