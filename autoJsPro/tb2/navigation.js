@@ -27,8 +27,9 @@ module.exports = function (runtime, scope) {
     scope.reopenTBToHome = function () {
         log("启动淘宝并返回首页...");
         app.launch("com.taobao.taobao");
-        randomSleep(2000, null, 1000);
-
+        randomSleep(1000);
+        app.launch("com.taobao.taobao");
+        randomSleep(1000);
         // 用 UI 控件选择器检测首页，不受高亮/选中状态影响（读无障碍树）
         var isHome = function () {
             return ocrRecognize("我的淘宝") !== null;
