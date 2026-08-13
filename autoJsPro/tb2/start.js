@@ -344,7 +344,7 @@ function taskLoop() {
                         app.launch("com.taobao.taobao");
                         backToTaskPage(true);
                     } else if (t.openType === 'farmQuiz') {
-                        var hasPlay = handleFarmQuizTask(t.text, t.offset, searchRegion);
+                        var hasPlay = handleFarmQuizTask(t.text, t.offset, searchRegion, t.altTexts);
                         if (!hasPlay) {
                             taskStatus = false;
                         }
@@ -397,9 +397,10 @@ function taskLoop() {
  * @param {string} taskText     - 任务入口文字
  * @param {object} taskOffset   - 点击偏移 {x, y}
  * @param {Array}  searchRegion - 任务搜索区域 [x,y,w,h]
+ * @param {Array}  [altTexts]   - 备选文字数组（如简繁变体），重找任务入口时也会尝试
  * @returns {boolean} 是否全部答完并领取成功
  */
-function handleFarmQuizTask(taskText, taskOffset, searchRegion) {
+function handleFarmQuizTask(taskText, taskOffset, searchRegion, altTexts) {
     log("===== 处理农场百科问答任务 =====");
     randomSleep(1500, null, 1000);
 
@@ -483,8 +484,8 @@ function handleFarmQuizTask(taskText, taskOffset, searchRegion) {
 
         if (qa === 0) {
             randomSleep(1200, null, 1000);
-            // 回到任务页后重新截图搜索任务入口
-            findTextAndClick(
+            // 回到任务页后重新截图搜索任务入口（含备选文字）
+            var refound = findTextAndClick(
                 taskText, METHOD_MLKIT_OCR,
                 {
                     offsetX: taskOffset ? taskOffset.x : undefined,
@@ -492,6 +493,19 @@ function handleFarmQuizTask(taskText, taskOffset, searchRegion) {
                     region: searchRegion
                 }
             );
+            if (!refound && altTexts && altTexts.length > 0) {
+                for (var ai = 0; ai < altTexts.length; ai++) {
+                    refound = findTextAndClick(
+                        altTexts[ai], METHOD_MLKIT_OCR,
+                        {
+                            offsetX: taskOffset ? taskOffset.x : undefined,
+                            offsetY: taskOffset ? taskOffset.y : undefined,
+                            region: searchRegion
+                        }
+                    );
+                    if (refound) break;
+                }
+            }
             // 如果是在左右布局模式，重新检测"选Ta"按钮（页面已刷新）
             if (isLeftRightMode) {
                 randomSleep(1500, null, 1000);
