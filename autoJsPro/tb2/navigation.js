@@ -402,6 +402,7 @@ module.exports = function (runtime, scope) {
     function pkgNameToLabel(pkg) {
         if (pkg === "com.taobao.taobao") return "淘宝";
         if (pkg === "com.eg.android.AlipayGphone") return "支付宝";
+        if (pkg === "com.sankuai.meituan") return "美团";
         if (pkg === "org.autojs.autojspro") return "Auto.js Pro";
         return pkg;
     }

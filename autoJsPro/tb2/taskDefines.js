@@ -124,7 +124,9 @@ module.exports = function (runtime, scope) {
                 totalSeconds: 6,
                 openType: 'goToOtherApp',
                 offset: {x: 40, y: 1},
-                once: true
+                once: true,
+                // 任务结束后强行停止美团（清理后台）
+                killAppAfter: "com.sankuai.meituan"
             },
             {
                 name: "去玩支付宝蚂蚁庄园",

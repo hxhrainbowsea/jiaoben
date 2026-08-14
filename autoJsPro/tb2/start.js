@@ -342,6 +342,14 @@ function taskLoop() {
                         waitInTaskPage(t);
                         // randomSleep(t.totalSeconds * 1000);
                         app.launch("com.taobao.taobao");
+                        // 任务结束后强行停止指定 app（如美团短视频任务结束后强杀美团）
+                        if (t.killAppAfter) {
+                            log("【" + t.name + "】任务结束，强行停止：" + t.killAppAfter);
+                            forceStopApp(t.killAppAfter);
+                            // forceStopApp 会停留在应用设置页，需重新切回淘宝前台
+                            app.launch("com.taobao.taobao");
+                            randomSleep(1500, null, 1200);
+                        }
                         backToTaskPage(true);
                     } else if (t.openType === 'farmQuiz') {
                         var hasPlay = handleFarmQuizTask(t.text, t.offset, searchRegion, t.altTexts);
