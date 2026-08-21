@@ -121,12 +121,20 @@ module.exports = function (runtime, scope) {
             {
                 name: "去美团短视频领现金",
                 text: "去美团短视频",
-                totalSeconds: 6,
+                totalSeconds: 13,
                 openType: 'goToOtherApp',
                 offset: {x: 40, y: 1},
                 once: true,
                 // 任务结束后强行停止美团（清理后台）
                 killAppAfter: "com.sankuai.meituan"
+            },
+            {
+                name: "领红包下单得肥料",
+                text: "包下单得肥料",
+                totalSeconds: 2,
+                openType: 'newPage',
+                offset: {x: 40, y: 1},
+                once: true
             },
             {
                 name: "去玩支付宝蚂蚁庄园",

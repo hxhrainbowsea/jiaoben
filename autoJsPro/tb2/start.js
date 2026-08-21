@@ -340,22 +340,21 @@ function taskLoop() {
                     } else if (t.openType === 'goToOtherApp') {
                         //跳转到别的app
                         waitInTaskPage(t);
-                        // randomSleep(t.totalSeconds * 1000);
 
                         // 任务结束后强行停止指定 app（如美团短视频任务结束后强杀美团）
-                        if (t.killAppAfter) {
-                            log("【" + t.name + "】任务结束，强行停止：" + t.killAppAfter);
-                            home();
+                        if(t.text === '去美团短视频'){
                             app.launch("com.taobao.taobao");
                             simulateSwipeBack();
-                            randomSleep(1500, null, 1200);
-                            home();
-                            app.launch("com.taobao.taobao");
-                            forceStopApp(t.killAppAfter);
-                            // forceStopApp 会停留在应用设置页，需重新切回淘宝前台
+                            simulateSwipeBack();
+                            simulateSwipeBack();
+                            simulateSwipeBack();
                         }
                         app.launch("com.taobao.taobao");
                         backToTaskPage(true);
+                        if (t.killAppAfter) {
+                            forceStopApp(t.killAppAfter);
+                            app.launch("com.taobao.taobao");
+                        }
                     } else if (t.openType === 'farmQuiz') {
                         var hasPlay = handleFarmQuizTask(t.text, t.offset, searchRegion, t.altTexts);
                         if (!hasPlay) {
