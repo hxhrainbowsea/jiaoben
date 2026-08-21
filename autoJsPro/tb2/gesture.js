@@ -628,6 +628,7 @@ module.exports = function (runtime, scope) {
      * @param {number}  [options.intervalMax]      - 两次滑动间最大停顿（ms），默认 2500
      * @param {Array}   [options.durationRegion]   - 校准区域 [x, y, w, h]，用于 OCR 识别剩余时间
      * @param {Array}   [options.durationText]     - 校准正则数组，如 ["\\d+滑动浏览", "\\d+浏览得"]
+     * @param {string}  [options.method]           - checkText 识别方法，默认 CURRENT_METHOD（WebView 页请传 METHOD_MLKIT_OCR）
      *
      * @example
      * scrollVerticalMultiple({ totalSeconds: 30 });                       // 浏览 30 秒
@@ -676,7 +677,7 @@ module.exports = function (runtime, scope) {
             // ---- 如果已进入检查阶段，每轮滑动前先检测 ----
             if (checkText && elapsed >= checkAfterMs) {
                 checkStarted = true;
-                var foundIt = scope.recognize(checkText, scope.CURRENT_METHOD, {region: checkTextRegion}) !== null;
+                var foundIt = scope.recognize(checkText, options.method || scope.CURRENT_METHOD, {region: checkTextRegion}) !== null;
                 if (foundIt) {
                     console.log("检测到【" + checkText + "】，终止滑动");
                     break;
@@ -722,7 +723,7 @@ module.exports = function (runtime, scope) {
 
         // ---- 如果已经开始检查但还没检测到，最后再查一次 ----
         if (checkStarted && checkText) {
-            var finalFound = scope.recognize(checkText, scope.CURRENT_METHOD, {region: checkTextRegion}) !== null;
+            var finalFound = scope.recognize(checkText, options.method || scope.CURRENT_METHOD, {region: checkTextRegion}) !== null;
             if (finalFound) {
                 console.log("检测到【" + checkText + "】，终止滑动");
             }
@@ -750,6 +751,7 @@ module.exports = function (runtime, scope) {
      * @param {string} [options.direction] - 滑动方向（仅滚动模式）
      * @param {Array} [options.durationRegion] - 校准区域 [x, y, w, h]，用于 OCR 识别剩余时间
      * @param {Array} [options.durationText] - 校准正则数组，如 ["\\d+滑动浏览", "\\d+浏览得"]
+     * @param {string} [options.method] - checkText 识别方法，默认 CURRENT_METHOD（WebView 页请传 METHOD_MLKIT_OCR）
      */
     scope.waitInTaskPage = function (options) {
         options = options || {};
@@ -795,7 +797,7 @@ module.exports = function (runtime, scope) {
             }
 
             if (elapsed >= checkAfterMs) {
-                var foundIt = scope.recognize(checkText, scope.CURRENT_METHOD, {region: checkTextRegion}) !== null;
+                var foundIt = scope.recognize(checkText, options.method || scope.CURRENT_METHOD, {region: checkTextRegion}) !== null;
                 if (foundIt) {
                     console.log("检测到【" + checkText + "】，提前结束等待");
                     return;

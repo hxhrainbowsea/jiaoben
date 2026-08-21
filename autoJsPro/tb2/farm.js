@@ -48,11 +48,120 @@ module.exports = function (runtime, scope) {
     };
 
     var guangFoundHasDoneToday = false;
+    /** 全屏广告今日是否已处理过（同「逛精选商品」模式：处理成功后标记，当天不再重复 OCR 检测） */
+    var adHasDoneToday = false;
+
+    // ============================================================
+    // 全屏广告拦截（浇水过程中可能突然弹出全屏广告，每天只处理一次）
+    //
+    // 两处识别，任一命中即进入处理：
+    //   A. 弹框刚弹出：屏幕下方 30% 区域，同时出现 "立即领取" 和 "2400"
+    //   B. 已在广告浏览页 B（误操作已点进/弹框已点）：屏幕上方 25% 区域出现 "完成所有任务得2400肥料"
+    //
+    // 处理流程：
+    //   1. 弹框状态先点击 "立即领取" 进入广告浏览页 B（已在 B 则跳过点击）
+    //   2. 滑动浏览，最长 _AD_BROWSE_SECONDS 秒（默认 70）
+    //   3. 屏幕上方出现 "恭喜完成所有任务" 则提前结束
+    //   4. 返回浇水页面，继续浇水
+    //   5. markTaskDone("全屏广告2400") 标记今日已完成，当天不再重复 OCR 检测
+    // ============================================================
+
+    var _AD_BROWSE_SECONDS = 70;     // 广告浏览页 B 最长浏览时长（秒）
+
+    /**
+     * 检测并处理浇水过程中弹出的全屏广告（两处识别，每天只处理一次）
+     *
+     * 参照「逛精选商品」模式：OCR_DEFS 配置 + ocrRecognize/ocrFindClick 调用 + hasDoneToday 标记。
+     *
+     * 识别A（弹框）：OCR_DEFS「2400」（MLKIT+下方30%）确认弹框特征，
+     *   再 ocrFindClick「立即领取」（extraOptions 覆盖为 MLKIT+下方30%+模糊匹配）点击进入浏览页。
+     * 识别B（已在浏览页B）：OCR_DEFS「完成所有任务得2400肥料」（MLKIT+上方25%），
+     *   广告瞬间弹出时可能误点进 B（正在滑动浏览），跳过点击直接进入浏览处理。
+     *
+     * @returns {boolean} true=检测到广告并已处理；false=未检测到广告或今日已处理过
+     */
+    scope.handleWaterAd = function () {
+        // 每天只处理一次：已标记完成则直接跳过，不再 OCR（同「逛精选商品」）
+        if (adHasDoneToday) return false;
+
+        var w = device.width;
+        var h = device.height;
+        var topRegion = [0, 0, w, Math.floor(h * 0.25)];    // 浏览页B特征文字区域（同「恭喜完成所有任务」）
+        var bottomRegion = [0, Math.floor(h * 0.7), w, Math.floor(h * 0.3)];  // 弹框识别区域（下方30%）
+
+        // ---- 1. 两处识别（任一命中即进入处理） ----
+        // 识别B：已在广告浏览页 B（误操作已点进，正处于滑动浏览）→ 不点击，直接浏览
+        //   OCR_DEFS「完成所有任务得2400肥料」= MLKIT + 上方25%
+        var inPageB = ocrRecognize("完成所有任务得2400肥料") !== null;
+        // 识别A：弹框刚弹出（下方30%「立即领取」+「2400」同屏）→ 需先点击领取
+        //   「2400」走 OCR_DEFS 配置（MLKIT+下方30%）验证弹框特征；
+        //   「立即领取」覆盖为 MLKIT+下方30%+模糊匹配（OCR_DEFS 默认 PADDLE+中上40%+exactMatch，点击偏移默认 CLICK_OFFSET 10/10）
+        var clicked = false;
+        if (!inPageB && ocrRecognize("2400") !== null) {
+            clicked = ocrFindClick("立即领取", {method: METHOD_MLKIT_OCR, region: bottomRegion, exactMatch: false});
+        }
+        // 两处都未命中 → 无广告
+        if (!inPageB && !clicked) {
+            log("【广告拦截】未检测到广告（弹框「立即领取」+「2400」/ 浏览页「完成所有任务得2400肥料」均未命中）");
+            return false;
+        }
+
+        // ---- 2. 进入浏览页（弹框状态先点击领取，已在 B 则跳过） ----
+        if (clicked) {
+            log("【广告拦截】检测到全屏广告（立即领取 + 2400），点击「立即领取」进入浏览页");
+            randomSleep(2500, null, 2000);
+        } else {
+            log("【广告拦截】已在广告浏览页 B（识别到「完成所有任务得2400肥料」），直接开始浏览");
+        }
+
+        // ---- 3. 广告浏览页 B：滑动浏览，最长 _AD_BROWSE_SECONDS 秒 ----
+        //      屏幕上方出现 "恭喜完成所有任务" 则提前结束（公用 waitInTaskPage，强制 MLKIT 识别）
+        waitInTaskPage({
+            totalSeconds: _AD_BROWSE_SECONDS,
+            checkText: "恭喜完成所有任务",
+            checkTextRegion: topRegion,
+            checkAfterSeconds: 60,       // 60秒后才开始检测完成文字
+            method: METHOD_MLKIT_OCR    // 广告页是 WebView，UI 树不可靠，必须像素级 OCR
+        });
+        simulateSwipeBack();
+        log("【广告拦截】浏览结束（最长 " + _AD_BROWSE_SECONDS + " 秒）");
+
+        // ---- 4. 返回浇水页面（广告页未自动关闭时才需要返回） ----
+        // 复用 OCR_DEFS「亲密度」配置（region 已内置），uiSel:true 允许走 UI_SELECTOR 快路径：
+        // 浇水页 UI 树精确命中，广告页 UI 树无此文字 → null → 正确判断不在农场页
+        var isOnFarmPage = function () {
+            return ocrRecognize("亲密度") !== null;
+        };
+        if (!isOnFarmPage()) {
+            randomSleep(800, null, 600);
+            simulateSwipeBack();
+            randomSleep(1500, null, 1200);
+            if (!isOnFarmPage()) {
+                log("【广告拦截】浏览页未完全关闭，再退一层");
+                simulateSwipeBack();
+                randomSleep(1500, null, 1200);
+            }
+        } else {
+            log("【广告拦截】已在农场浇水页，无需返回");
+        }
+
+        // ---- 5. 标记今日已完成（同「逛精选商品」：当天不再重复 OCR 检测） ----
+        markTaskDone("全屏广告2400");
+        adHasDoneToday = true;
+
+        log("【广告拦截】处理完成，继续浇水");
+        return true;
+    };
+
     /**
      * 浇水后处理弹框（逛精选商品、施肥弹框、关闭弹框）
      * @returns {boolean} true=还有奖励可领
      */
     scope.handleWaterRoutine = function () {
+        // ★ 全屏广告拦截：浇水过程中可能突然弹出全屏广告，检测到则浏览广告后返回继续
+        if (!adHasDoneToday) {
+            handleWaterAd();
+        }
         // "逛精选商品"每天只出现一次，已处理过则跳过 OCR
         var guangFound = false;
         if (!guangFoundHasDoneToday) {
@@ -71,6 +180,10 @@ module.exports = function (runtime, scope) {
         }
         //关闭浇水时的弹框
         iconFindClick("jiaoshui_close", {region: [Math.floor(device.width * 0.4), Math.floor(device.height * 0.5), Math.floor(device.width * 0.5), Math.floor(device.height * 0.4)]});
+        // 第二次检查（如果当天还没处理过才需要）——全屏广告同「逛精选商品」，处理完弹框后再补查一次
+        if (!adHasDoneToday) {
+            handleWaterAd();
+        }
         // 第二次检查（如果当天还没处理过才需要）
         if (!guangFoundHasDoneToday) {
             guangFound = ocrFindClick("逛精选商品");
@@ -113,6 +226,7 @@ module.exports = function (runtime, scope) {
             return;
         }
         guangFoundHasDoneToday = isTaskDoneToday("逛精选商品");
+        adHasDoneToday = isTaskDoneToday("全屏广告2400");
         if (_waterMode === "count") {
             if (_waterNum <= 0) {
                 log("【固定浇水】次数无效，跳过本次浇水");
