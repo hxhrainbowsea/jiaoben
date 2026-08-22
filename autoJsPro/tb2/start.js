@@ -355,6 +355,8 @@ function taskLoop() {
                             forceStopApp(t.killAppAfter);
                             app.launch("com.taobao.taobao");
                         }
+                        randomSleep(1200)
+                        app.launch("com.taobao.taobao");
                     } else if (t.openType === 'farmQuiz') {
                         var hasPlay = handleFarmQuizTask(t.text, t.offset, searchRegion, t.altTexts);
                         if (!hasPlay) {
