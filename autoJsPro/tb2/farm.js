@@ -66,7 +66,7 @@ module.exports = function (runtime, scope) {
     //   5. markTaskDone("全屏广告2400") 标记今日已完成，当天不再重复 OCR 检测
     // ============================================================
 
-    var _AD_BROWSE_SECONDS = 90;     // 广告浏览页 B 最长浏览时长（秒）
+    var _AD_BROWSE_SECONDS = 100;     // 广告浏览页 B 最长浏览时长（秒）
 
     /**
      * 检测并处理浇水过程中弹出的全屏广告（两处识别，每天只处理一次）
