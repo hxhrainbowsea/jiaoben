@@ -159,9 +159,7 @@ module.exports = function (runtime, scope) {
      */
     scope.handleWaterRoutine = function () {
         // ★ 全屏广告拦截：浇水过程中可能突然弹出全屏广告，检测到则浏览广告后返回继续
-        if (!adHasDoneToday) {
-            handleWaterAd();
-        }
+        handleWaterAd();
         // "逛精选商品"每天只出现一次，已处理过则跳过 OCR
         var guangFound = false;
         if (!guangFoundHasDoneToday) {
@@ -181,9 +179,9 @@ module.exports = function (runtime, scope) {
         //关闭浇水时的弹框
         iconFindClick("jiaoshui_close", {region: [Math.floor(device.width * 0.4), Math.floor(device.height * 0.5), Math.floor(device.width * 0.5), Math.floor(device.height * 0.4)]});
         // 第二次检查（如果当天还没处理过才需要）——全屏广告同「逛精选商品」，处理完弹框后再补查一次
-        if (!adHasDoneToday) {
-            handleWaterAd();
-        }
+
+        handleWaterAd();
+
         // 第二次检查（如果当天还没处理过才需要）
         if (!guangFoundHasDoneToday) {
             guangFound = ocrFindClick("逛精选商品");
