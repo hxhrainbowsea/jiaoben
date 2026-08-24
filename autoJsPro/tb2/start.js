@@ -260,16 +260,11 @@ function taskLoop() {
 
                 // 在缓存 OCR 结果中搜索，不重新截图
                 // 先尝试主 text，再尝试 altTexts 备选文字（如简繁变体）
-                var canFind = findTextInResultsAndClick(ocrResults, t.text, {
-                    offsetX: t.offset ? t.offset.x : undefined,
-                    offsetY: t.offset ? t.offset.y : undefined
-                });
+                // 直接传 t：offsetX/offsetY/dx/dy 等点击属性自动透传，任务新增属性无需改这里
+                var canFind = findTextInResultsAndClick(ocrResults, t.text, t);
                 if (!canFind && t.altTexts && t.altTexts.length > 0) {
                     for (var k = 0; k < t.altTexts.length; k++) {
-                        canFind = findTextInResultsAndClick(ocrResults, t.altTexts[k], {
-                            offsetX: t.offset ? t.offset.x : undefined,
-                            offsetY: t.offset ? t.offset.y : undefined
-                        });
+                        canFind = findTextInResultsAndClick(ocrResults, t.altTexts[k], t);
                         if (canFind) break;
                     }
                 }
@@ -358,7 +353,7 @@ function taskLoop() {
                         randomSleep(1200)
                         app.launch("com.taobao.taobao");
                     } else if (t.openType === 'farmQuiz') {
-                        var hasPlay = handleFarmQuizTask(t.text, t.offset, searchRegion, t.altTexts);
+                        var hasPlay = handleFarmQuizTask(t, searchRegion);
                         if (!hasPlay) {
                             taskStatus = false;
                         }
@@ -408,13 +403,11 @@ function taskLoop() {
  *
  * 两种模式共用后续逻辑（查领取奖励→关闭弹窗→返回）。
  *
- * @param {string} taskText     - 任务入口文字
- * @param {object} taskOffset   - 点击偏移 {x, y}
+ * @param {Object} task        - 任务定义对象（text/altTexts/offsetX/offsetY 等直接读取）
  * @param {Array}  searchRegion - 任务搜索区域 [x,y,w,h]
- * @param {Array}  [altTexts]   - 备选文字数组（如简繁变体），重找任务入口时也会尝试
  * @returns {boolean} 是否全部答完并领取成功
  */
-function handleFarmQuizTask(taskText, taskOffset, searchRegion, altTexts) {
+function handleFarmQuizTask(task, searchRegion) {
     log("===== 处理农场百科问答任务 =====");
     randomSleep(1500, null, 1000);
 
@@ -498,25 +491,19 @@ function handleFarmQuizTask(taskText, taskOffset, searchRegion, altTexts) {
 
         if (qa === 0) {
             randomSleep(1200, null, 1000);
-            // 回到任务页后重新截图搜索任务入口（含备选文字）
-            var refound = findTextAndClick(
-                taskText, METHOD_MLKIT_OCR,
-                {
-                    offsetX: taskOffset ? taskOffset.x : undefined,
-                    offsetY: taskOffset ? taskOffset.y : undefined,
-                    region: searchRegion
-                }
-            );
-            if (!refound && altTexts && altTexts.length > 0) {
-                for (var ai = 0; ai < altTexts.length; ai++) {
-                    refound = findTextAndClick(
-                        altTexts[ai], METHOD_MLKIT_OCR,
-                        {
-                            offsetX: taskOffset ? taskOffset.x : undefined,
-                            offsetY: taskOffset ? taskOffset.y : undefined,
-                            region: searchRegion
-                        }
-                    );
+            // 回到任务页后重新截图搜索任务入口（含备选文字），直接传 task 透传点击属性
+            var refound = findTextAndClick(task.text, METHOD_MLKIT_OCR, {
+                offsetX: task.offsetX,
+                offsetY: task.offsetY,
+                region: searchRegion
+            });
+            if (!refound && task.altTexts && task.altTexts.length > 0) {
+                for (var ai = 0; ai < task.altTexts.length; ai++) {
+                    refound = findTextAndClick(task.altTexts[ai], METHOD_MLKIT_OCR, {
+                        offsetX: task.offsetX,
+                        offsetY: task.offsetY,
+                        region: searchRegion
+                    });
                     if (refound) break;
                 }
             }

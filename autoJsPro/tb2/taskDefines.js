@@ -17,7 +17,8 @@
 //     'goToOtherApp'   - 跳转到别的app
 //     'farmQuiz'       - 农场百科问答
 //   clickText      - 进入后要点击的文字（仅 newPageAndClick）
-//   offset         - 点击随机偏移量
+//   offsetX/offsetY - 点击随机偏移量（扁平结构，直接透传给 findTextInResultsAndClick）
+//   dx/dy          - 点击定向偏移像素（同理直接透传；新增点击相关属性请保持扁平命名，自动生效）
 //   once           - 是否每日只做一次
 //   altTexts       - 备选文字数组，OCR 识别到其中任意一个即匹配成功（如简繁变体）
 //   durationRegion - 校准区域 [x, y, w, h]，用于 OCR 识别剩余浏览时间（可选）
@@ -43,16 +44,19 @@ module.exports = function (runtime, scope) {
                 text: "看严选推荐商品",
                 totalSeconds: 35,
                 openType: 'newPage',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 noScroll: true
             },
             {
-                name: "精选好物", text: "精选好物", totalSeconds: 32, openType: 'newPage', offset: {x: 40, y: 1},
+                name: "精选好物", text: "精选好物", totalSeconds: 32, openType: 'newPage', offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 durationRegion: [Math.floor(device.width * 0.3), 0, Math.floor(device.width * 0.7), Math.floor(device.height * 0.2)],
                 durationText: ["[^\\d\\u4e00-\\u9fa5]*\\d+[^\\d\\u4e00-\\u9fa5]*(?:滑动浏览|浏览得)"],
             },
             {
-                name: "看看#经典", text: "看看#经典", totalSeconds: 20, openType: 'newPage', offset: {x: 40, y: 1},
+                name: "看看#经典", text: "看看#经典", totalSeconds: 20, openType: 'newPage', offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 durationRegion: [Math.floor(device.width * 0.3), 0, Math.floor(device.width * 0.7), Math.floor(device.height * 0.2)],
                 durationText: ["[^\\d\\u4e00-\\u9fa5]*\\d+[^\\d\\u4e00-\\u9fa5]*(?:滑动浏览|浏览得)"],
             },
@@ -61,7 +65,8 @@ module.exports = function (runtime, scope) {
                 text: "浏览页面得",
                 totalSeconds: 15,
                 openType: 'newPage',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 durationRegion: [Math.floor(device.width * 0.3), 0, Math.floor(device.width * 0.7), Math.floor(device.height * 0.2)],
                 durationText: ["[^\\d\\u4e00-\\u9fa5]*\\d+[^\\d\\u4e00-\\u9fa5]*(?:滑动浏览|浏览得)"],
             },
@@ -72,7 +77,8 @@ module.exports = function (runtime, scope) {
                 totalSeconds: 7,
                 openType: 'newPageAndClick',
                 clickText: "签到领金币",
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 clickRegion: [Math.floor(device.width * 0.1), Math.floor(device.height * 0.1), Math.floor(device.width * 0.8), Math.floor(device.height * 0.3)],
                 once: true
             }, {
@@ -81,14 +87,35 @@ module.exports = function (runtime, scope) {
                 totalSeconds: 7,
                 openType: 'newPageAndClick',
                 clickText: "签到领金币",
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 clickRegion: [Math.floor(device.width * 0.1), Math.floor(device.height * 0.1), Math.floor(device.width * 0.8), Math.floor(device.height * 0.3)],
                 once: true
             },
-            {name: "天天签到", text: "天天签到", totalSeconds: 16, openType: 'newPage', offset: {x: 40, y: 1}, once: true},
-            {name: "618", text: "618品牌", totalSeconds: 16, openType: 'newPage', offset: {x: 40, y: 1}, once: true},
             {
-                name: "搜一搜", text: "搜一搜你", totalSeconds: 23, openType: 'newTwoPage', offset: {x: 40, y: 1},
+                name: "天天签到",
+                text: "天天签到",
+                totalSeconds: 16,
+                openType: 'newPage',
+                offsetX: 40, offsetY: 1,
+                once: true
+            },
+            {
+                name: "618",
+                text: "618品牌",
+                totalSeconds: 16,
+                openType: 'newPage',
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
+                once: true
+            },
+            {
+                name: "搜一搜",
+                text: "搜一搜你",
+                totalSeconds: 23,
+                openType: 'newTwoPage',
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 durationRegion: [Math.floor(device.width * 0.3), 0, Math.floor(device.width * 0.7), Math.floor(device.height * 0.2)],
                 durationText: ["[^\\d\\u4e00-\\u9fa5]*\\d+[^\\d\\u4e00-\\u9fa5]*(?:滑动浏览|浏览得)"],
             },
@@ -99,7 +126,8 @@ module.exports = function (runtime, scope) {
                 text: "60元红包",
                 totalSeconds: 16,
                 openType: 'newPage',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true,
             },
             {
@@ -107,7 +135,8 @@ module.exports = function (runtime, scope) {
                 text: "点击3个商品",
                 totalSeconds: 10,
                 openType: 'newThreePage',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true
             },
             {
@@ -115,7 +144,8 @@ module.exports = function (runtime, scope) {
                 text: "逛一逛支付宝",
                 totalSeconds: 6,
                 openType: 'goToOtherApp',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true
             },
             {
@@ -123,7 +153,9 @@ module.exports = function (runtime, scope) {
                 text: "去美团短视频",
                 totalSeconds: 13,
                 openType: 'goToOtherApp',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
+                noScroll: true,
                 once: true,
                 // 任务结束后强行停止美团（清理后台）
                 killAppAfter: "com.sankuai.meituan"
@@ -133,7 +165,8 @@ module.exports = function (runtime, scope) {
                 text: "包下单得肥料",
                 totalSeconds: 2,
                 openType: 'newPage',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true
             },
             {
@@ -141,7 +174,8 @@ module.exports = function (runtime, scope) {
                 text: "支付宝蚂",
                 totalSeconds: 6,
                 openType: 'goToOtherApp',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true
             },
             {
@@ -149,7 +183,8 @@ module.exports = function (runtime, scope) {
                 text: "浏览淘宝秒杀",
                 totalSeconds: 20,
                 openType: 'newPage',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true
             },
             {
@@ -157,7 +192,8 @@ module.exports = function (runtime, scope) {
                 text: "新村收木兰币",
                 totalSeconds: 6,
                 openType: 'goToOtherApp',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true
             },
             {
@@ -165,14 +201,16 @@ module.exports = function (runtime, scope) {
                 text: "去支付宝",
                 totalSeconds: 6,
                 openType: 'goToOtherApp',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true
             }, {
                 name: "试玩农场火爆新游",
                 text: "试玩农场",
                 totalSeconds: 40,
                 openType: 'goToOtherApp',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 noScroll: true,
                 checkAfterSeconds: 30,
                 checkTextRegion: [Math.floor(device.width * 0.6), Math.floor(device.height * 0.6), Math.floor(device.width * 0.4), Math.floor(device.height * 0.3)],
@@ -183,7 +221,7 @@ module.exports = function (runtime, scope) {
             //     text: "逛逛支付",
             //     totalSeconds: 13,
             //     openType: 'goToOtherApp',
-            //     offset: {x: 40, y: 1},
+            //     offsetX: 40, offsetY: 1,
             //     once: true, noScroll: true
             // },
             {
@@ -191,7 +229,8 @@ module.exports = function (runtime, scope) {
                 text: "去红包签到",
                 totalSeconds: 15,
                 openType: 'newPage',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true, noScroll: true
             },
             {
@@ -199,20 +238,28 @@ module.exports = function (runtime, scope) {
                 text: "拍照立即",
                 totalSeconds: 2,
                 openType: 'newPage',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true,
                 noScroll: true
             },
             {
-                name: "玩天天", text: "玩天天", totalSeconds: 10,
-                openType: 'newPage', offset: {x: 40, y: 1}, once: true, noScroll: true
+                name: "玩天天",
+                text: "玩天天",
+                totalSeconds: 10,
+                openType: 'newPage',
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
+                once: true,
+                noScroll: true
             },
             {
                 name: "看精彩视频",
                 text: "看精彩视频",
                 totalSeconds: 20,
                 openType: 'newPage',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true,
                 noScroll: true
             },
@@ -221,16 +268,20 @@ module.exports = function (runtime, scope) {
                 name: "玩消消乐得肥料",
                 text: "玩消消乐",
                 openType: 'xiaoxiaole',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true,
-                condition: function() { return global._xiaoxiaoleEnabled; }
+                condition: function () {
+                    return global._xiaoxiaoleEnabled;
+                }
             },
             {
                 name: "品牌x农场狂补周",
                 text: "浏览会场",
                 openType: 'newPage',
                 totalSeconds: 16,
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true, noScroll: true
             },
             {
@@ -238,7 +289,8 @@ module.exports = function (runtime, scope) {
                 text: "天天开红包",
                 openType: 'newPage',
                 totalSeconds: 6,
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true, noScroll: true, altTexts: ["天天开紅包"]
             },
             {
@@ -246,7 +298,8 @@ module.exports = function (runtime, scope) {
                 text: "去小黑盒",
                 openType: 'newPage',
                 totalSeconds: 6,
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true, noScroll: true
             },
             {
@@ -254,7 +307,8 @@ module.exports = function (runtime, scope) {
                 text: "去闲鱼币",
                 totalSeconds: 8,
                 openType: 'goToOtherApp',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true, noScroll: true
             },
             {
@@ -262,25 +316,32 @@ module.exports = function (runtime, scope) {
                 text: "去头条极",
                 totalSeconds: 8,
                 openType: 'goToOtherApp',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true, noScroll: true,
-                condition: function () { return !!getPackageName("今日头条极速版"); }
+                condition: function () {
+                    return !!getPackageName("今日头条极速版");
+                }
             },
             {
                 name: "去头条刷热点领现金",
                 text: "去头条刷",
                 totalSeconds: 8,
                 openType: 'goToOtherApp',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true, noScroll: true,
-                condition: function () { return !!getPackageName("今日头条"); }
+                condition: function () {
+                    return !!getPackageName("今日头条");
+                }
             },
             {
                 name: "玩薅羊毛免费领取话费",
                 text: "浏览5s得",
                 totalSeconds: 8,
                 openType: 'newPage',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true, noScroll: true
             },
             {
@@ -288,11 +349,30 @@ module.exports = function (runtime, scope) {
                 text: "浏览5秒得",
                 totalSeconds: 8,
                 openType: 'newPage',
-                offset: {x: 40, y: 1},
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
                 once: true, noScroll: true
             },
+            {
+                name: "玩一局斗地主",
+                text: "斗地主",
+                openType: 'doudizhu',
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
+                once: true,
+                condition: function () {
+                    return global._doudizhuEnabled;
+                }
+            },
             //兜底方案
-            {name: "浏览得奖励", text: "浏览得", totalSeconds: 21, openType: 'newOneOrTwoPage', offset: {x: 40, y: 0}},
+            {
+                name: "浏览得奖励",
+                text: "浏览得",
+                totalSeconds: 21,
+                openType: 'newOneOrTwoPage',
+                dx: Math.floor(device.width * 0.35),
+                offsetX: 40, offsetY: 0
+            },
         ];
     };
 };
