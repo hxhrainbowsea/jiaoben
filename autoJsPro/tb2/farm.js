@@ -120,7 +120,7 @@ module.exports = function (runtime, scope) {
             totalSeconds: _AD_BROWSE_SECONDS,
             checkText: "恭喜完成所有任务",
             checkTextRegion: topRegion,
-            checkAfterSeconds: 65,       // 60秒后才开始检测完成文字
+            checkAfterSeconds: 85,       // 60秒后才开始检测完成文字
             method: METHOD_MLKIT_OCR    // 广告页是 WebView，UI 树不可靠，必须像素级 OCR
         });
         simulateSwipeBack();
