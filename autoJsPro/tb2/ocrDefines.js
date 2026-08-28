@@ -112,7 +112,7 @@ module.exports = function (runtime, scope) {
             region: [0, Math.floor(device.height * 0.6), device.width, Math.floor(device.height * 0.3)]
         },
         "领阳光": {
-            method: scope.METHOD_MLKIT_OCR, exactMatch: true,
+            method: scope.METHOD_PADDLE_OCR, exactMatch: true,
             region: [Math.floor(device.width * 0.6), 0, Math.floor(device.width * 0.4), device.height],
             dx: 50, dy: -70,
         },
