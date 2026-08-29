@@ -335,7 +335,6 @@ function taskLoop() {
                     } else if (t.openType === 'goToOtherApp') {
                         //跳转到别的app
                         waitInTaskPage(t);
-
                         // 任务结束后强行停止指定 app（如美团短视频任务结束后强杀美团）
                         if(t.text === '去美团短视频'){
                             app.launch("com.taobao.taobao");
@@ -344,14 +343,14 @@ function taskLoop() {
                             simulateSwipeBack();
                             simulateSwipeBack();
                         }
+                        if (t.killAppAfter) {
+                            app.launch("com.taobao.taobao");
+                            backToTaskPage(true);
+                            forceStopApp(t.killAppAfter);
+                            randomSleep(1200)
+                        }
                         app.launch("com.taobao.taobao");
                         backToTaskPage(true);
-                        if (t.killAppAfter) {
-                            forceStopApp(t.killAppAfter);
-                            app.launch("com.taobao.taobao");
-                        }
-                        randomSleep(1200)
-                        app.launch("com.taobao.taobao");
                     } else if (t.openType === 'farmQuiz') {
                         var hasPlay = handleFarmQuizTask(t, searchRegion);
                         if (!hasPlay) {
@@ -582,7 +581,9 @@ function handleXiaoxiaoleTask() {
 
     // ---- 4. 识别"开始"在屏幕高度 50%~80% 并点击 ----
     log("点击【开始】...");
-    var startClicked = ocrFindClick("开始");
+    var startClicked = ocrWaitForText("开始", {
+        clickWhenFound: true
+    });
     if (!startClicked) {
         log("未找到【开始】按钮");
         return false;
