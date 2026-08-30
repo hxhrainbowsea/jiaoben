@@ -80,16 +80,17 @@ module.exports = function (runtime, scope) {
             method: scope.METHOD_PADDLE_OCR, exactMatch: true,
             region: [0, Math.floor(device.height * 0.4), device.width, Math.floor(device.height * 0.2)]
         },
-        // ---- 广告拦截（浇水过程中弹出的全屏广告）----
-        // 识别B：已在广告浏览页B，特征文字在上方25%（同「恭喜完成所有任务」区域），WebView 须 MLKIT 像素级 OCR
-        "完成所有任务得2400肥料": {
-            method: scope.METHOD_MLKIT_OCR,
-            region: [0, 0, device.width, Math.floor(device.height * 0.25)]
-        },
-        // 识别A辅助：广告弹框奖励数「2400」（下方30%），与「立即领取」同屏验证用（防误触）
-        "2400": {
-            method: scope.METHOD_MLKIT_OCR,
-            region: [0, Math.floor(device.height * 0.7), device.width, Math.floor(device.height * 0.3)]
+        // ---- 广告拦截（浇水过程中当前页弹出的广告弹框）----
+        // 新模式：弹框在当前页面弹出，点击「2400肥料」进入广告浏览页
+        // PADDLE OCR + 中上区域（0.1 / 0.2 / 0.8 / 0.3）
+        "2400肥料": {
+            method: scope.METHOD_PADDLE_OCR,
+            region: [
+                Math.floor(device.width * 0.1),
+                Math.floor(device.height * 0.2),
+                Math.floor(device.width * 0.8),
+                Math.floor(device.height * 0.3)
+            ]
         },
         "取升级阳光": {
             method: scope.METHOD_PADDLE_OCR,
