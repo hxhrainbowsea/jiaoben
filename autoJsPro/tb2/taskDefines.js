@@ -336,6 +336,18 @@ module.exports = function (runtime, scope) {
                 }
             },
             {
+                name: "来汽车之家领购车补贴",
+                text: "来汽车之家",
+                totalSeconds: 5,
+                openType: 'goToOtherApp',
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35),
+                once: true, noScroll: true,
+                condition: function () {
+                    return !!getPackageName("汽车之家");
+                }
+            },
+            {
                 name: "玩薅羊毛免费领取话费",
                 text: "浏览5s得",
                 totalSeconds: 8,
