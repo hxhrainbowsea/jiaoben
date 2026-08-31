@@ -134,46 +134,90 @@ module.exports = function (runtime, scope) {
         return true;
     };
 
+    /** 浇水弹框关闭图标的识别区域（屏幕右下 40%×40%，与历史行为保持一致） */
+    var _CLOSE_ICON_OPTS = {
+        region: [
+            Math.floor(device.width * 0.4),
+            Math.floor(device.height * 0.5),
+            Math.floor(device.width * 0.5),
+            Math.floor(device.height * 0.4)
+        ]
+    };
+
+    /** 单次调用最多处理的弹框层数（关掉一个会再冒一个，留上限防死循环） */
+    var _MAX_POPUP_LAYERS = 3;
+
     /**
-     * 浇水后处理弹框（逛精选商品、施肥弹框、关闭弹框）
+     * 浇水后处理弹框（逛精选商品、全屏广告、其他弹框）
+     *
+     * 浇水时弹出的所有弹框都带 jiaoshui_close 图标，因此以它作为「当前是否有弹框」的探针：
+     *   1. iconRecognize 探测（只识别不点击）是否存在关闭图标
+     *   2. 不存在 → 没有弹框，直接跳过，不做任何 OCR / 点击
+     *   3. 存在   → randomSleep(2000) 等弹框渲染稳定，再判定是不是要处理的任务弹框
+     *        · 「逛精选商品」 → 浏览后返回，标记今日已完成
+     *        · 全屏广告       → handleWaterAd() 浏览后返回
+     *        · 两者都不是     → 直接点关闭图标关掉
+     *   4. 处理完一层后回到 1 重新探测（关掉一个还会再冒一个），
+     *      直到探测不到关闭图标或达到 _MAX_POPUP_LAYERS 层为止
+     *
+     * 关闭时复用 iconRecognize 已拿到的坐标直接 clickWithOffset，
+     * 不再二次调用 iconFindClick，省掉一轮模板匹配开销。
+     *
      * @returns {boolean} true=还有奖励可领
      */
     scope.handleWaterRoutine = function () {
-        // ★ 全屏广告拦截：浇水过程中可能突然弹出全屏广告，检测到则浏览广告后返回继续
-        handleWaterAd();
-        // "逛精选商品"每天只出现一次，已处理过则跳过 OCR
-        var guangFound = false;
-        if (!guangFoundHasDoneToday) {
-            guangFound = ocrFindClick("逛精选商品");
-            if (guangFound) {
+        for (var layer = 0; layer < _MAX_POPUP_LAYERS; layer++) {
+            // ---- 1. 探测弹框（只识别，不点击）----
+            var closePos = iconRecognize("jiaoshui_close", _CLOSE_ICON_OPTS);
+            if (!closePos) {
+                log("【弹框处理】未检测到弹框（无 jiaoshui_close 图标），结束处理");
+                break;
+            }
+
+            log("【弹框处理】检测到第 " + (layer + 1) + " 层弹框，等待 2 秒后判定类型");
+            randomSleep(2000);
+
+            // ---- 2. 优先判定是否为需要浏览的任务弹框 ----
+            var handled = false;
+
+            // 2.1 「逛精选商品」：每天只出现一次，已处理过则跳过 OCR
+            if (!guangFoundHasDoneToday && ocrFindClick("逛精选商品")) {
                 scrollVerticalMultiple({totalSeconds: 22});
                 simulateSwipeBack();
                 randomSleep(1000, null, 800);
                 markTaskDone("逛精选商品");
                 guangFoundHasDoneToday = true;
+                handled = true;
+                log("【弹框处理】已处理「逛精选商品」");
             }
+
+            // 2.2 全屏广告（内部有 adHasDoneToday 标记，重复调用安全）
+            if (!handled && handleWaterAd()) {
+                handled = true;
+                log("【弹框处理】已处理全屏广告");
+            }
+
+            // ---- 3. 非任务弹框（施肥、奖励等）→ 复用探测结果直接点关闭 ----
+            if (!handled) {
+                log("【弹框处理】普通弹框，复用探测坐标点击关闭 (" + closePos.centerX + "," + closePos.centerY + ")");
+                clickWithOffset({
+                    left: closePos.x,
+                    top: closePos.y,
+                    right: closePos.x + closePos.w,
+                    bottom: closePos.y + closePos.h
+                });
+                randomSleep(1000, null, 800);
+            }
+
+            log("【弹框处理】第 " + (layer + 1) + " 层处理完毕，继续探测下一层");
         }
+
+        // ---- 4. 施肥弹框 ----
         let hasFound = iconFindClick("jiaoshui_feiliao");
         if (hasFound) {
-            randomSleep(1000, null, 800);
+            randomSleep(500);
         }
-        //关闭浇水时的弹框
-        iconFindClick("jiaoshui_close", {region: [Math.floor(device.width * 0.4), Math.floor(device.height * 0.5), Math.floor(device.width * 0.5), Math.floor(device.height * 0.4)]});
-        // 第二次检查（如果当天还没处理过才需要）——全屏广告同「逛精选商品」，处理完弹框后再补查一次
 
-        handleWaterAd();
-
-        // 第二次检查（如果当天还没处理过才需要）
-        if (!guangFoundHasDoneToday) {
-            guangFound = ocrFindClick("逛精选商品");
-            if (guangFound) {
-                scrollVerticalMultiple({totalSeconds: 22});
-                simulateSwipeBack();
-                randomSleep(1000, null, 800);
-                markTaskDone("逛精选商品");
-                guangFoundHasDoneToday = true;
-            }
-        }
         //检查还有没有奖励
         return ocrRecognize(["次可领","加码"]) !== null;
     };
