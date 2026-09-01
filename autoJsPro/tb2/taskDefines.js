@@ -376,6 +376,14 @@ module.exports = function (runtime, scope) {
                     return global._doudizhuEnabled;
                 }
             },
+            {
+                name: "去超级立减浏览好物",
+                text: "浏览15秒",
+                openType: 'newPage',
+                totalSeconds: 22,
+                offsetX: 40, offsetY: 1,
+                dx: Math.floor(device.width * 0.35)
+            },
             //兜底方案
             {
                 name: "浏览得奖励",
