@@ -90,7 +90,7 @@ module.exports = function (runtime, scope) {
             return false;
         }
         log("【广告拦截】检测到广告弹框，点击「2400肥料」进入浏览页");
-        randomSleep(2500, null, 2000);
+        randomSleep(2500);
 
         // ---- 2. 广告浏览页：滑动浏览，最长 _AD_BROWSE_SECONDS 秒 ----
         //      屏幕上方出现 "恭喜完成所有任务" 则提前结束（公用 waitInTaskPage，强制 MLKIT 识别）
@@ -219,7 +219,7 @@ module.exports = function (runtime, scope) {
         }
 
         //检查还有没有奖励
-        return ocrRecognize(["次可领","加码"]) !== null;
+        return ocrRecognize(["次可领", "加码"]) !== null;
     };
 
     /**
@@ -815,6 +815,8 @@ module.exports = function (runtime, scope) {
         }
     }
 
+    var get20SunHasDoneToday = false
+
     /**
      * 收集屏幕上的阳光图标（sun.jpg），遇到"浏览得奖励"或"去得阳光"则浏览后返回再收
      */
@@ -832,6 +834,15 @@ module.exports = function (runtime, scope) {
             if (isBrowseReward) {
                 scrollVerticalMultiple({totalSeconds: 23, checkText: "任务完成", checkTextRegion: checkTextRegion});
                 simulateSwipeBack();
+            }
+            if (!get20SunHasDoneToday) {
+                isBrowseReward = ocrFindClick("浏览得阳光");
+                if (isBrowseReward) {
+                    scrollVerticalMultiple({totalSeconds: 30, checkText: "任务完成", checkTextRegion: checkTextRegion});
+                    simulateSwipeBack();
+                    markTaskDone("浏览得20阳光");
+                    get20SunHasDoneToday = true;
+                }
             }
             click = iconFindClick("sun");
         }
@@ -900,6 +911,7 @@ module.exports = function (runtime, scope) {
         } else {
             log("【领阳光】今日已完成，跳过");
         }
+        get20SunHasDoneToday = isTaskDoneToday("浏览得20阳光");
         randomSleep(800, null, 600);
         collectSunIcons();
         clickFontAndHandleUpgrade("万");

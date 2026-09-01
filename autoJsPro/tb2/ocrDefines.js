@@ -90,7 +90,8 @@ module.exports = function (runtime, scope) {
                 Math.floor(device.height * 0.2),
                 Math.floor(device.width * 0.8),
                 Math.floor(device.height * 0.3)
-            ]
+            ],
+            dy: Math.floor(device.height * 0.2),
         },
         "取升级阳光": {
             method: scope.METHOD_PADDLE_OCR,
@@ -99,6 +100,10 @@ module.exports = function (runtime, scope) {
         "浏览得奖励": {
             method: scope.CURRENT_METHOD, uiSel: true,
             region: [Math.floor(device.width * 0.2), Math.floor(device.height * 0.5), Math.floor(device.width * 0.6), Math.floor(device.height * 0.3)]
+        },
+        "浏览得阳光": {
+            method: scope.CURRENT_METHOD, uiSel: true,
+            region: [0, 0, Math.floor(device.width * 0.5), Math.floor(device.height * 0.2)]
         },
         "去得阳光": {
             method: scope.CURRENT_METHOD, exactMatch: true, uiSel: true,
