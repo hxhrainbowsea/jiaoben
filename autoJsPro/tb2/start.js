@@ -279,12 +279,14 @@ function taskLoop() {
                     } else if (t.openType === 'none') {
                         randomSleep(500, null, 300);
                     } else if (t.openType === 'newTwoPage') {
+                        console.hide();
                         let click = ocrWaitForText("搜索发现", {
                             timeout: 5000,
                             clickWhenFound: true,
                             dx: 300,
                             dy: 200
                         });
+                        console.show();
                         if (!click) {
                             log("【" + t.name + "】点击搜索发现失败");
                             backToTaskPage();
@@ -293,11 +295,14 @@ function taskLoop() {
                         waitInTaskPage(t);
                         simulateSwipeBack();
                         backToTaskPage();
+
                     } else if (t.openType === 'newOneOrTwoPage') {
                         randomSleep(805, null, 705);
                         var isTowPage = ocrRecognize("搜索发现") !== null;
                         if (isTowPage) {
+                            console.hide();
                             ocrFindClick("搜索发现", {dx: 300, dy: 200});
+                            console.show();
                         }
                         waitInTaskPage(t);
                         backToTaskPage();
