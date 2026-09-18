@@ -57,27 +57,32 @@ module.exports = function (runtime, scope) {
     // 模式：非强制跳转页面，而是在当前页面弹出广告弹框。
     //   弹框必须点击「立即领取」才会进入广告浏览页。
     //
+    // 判据：弹框内须同时出现「2400」字样 + 「立即领取」才算广告弹框。
+    //   普通弹窗（如点「亲密度」打开的弹窗）同样带「立即领取」但没有「2400」，
+    //   仅凭「立即领取」会误判，故以「2400」作为正向判据。
+    //
     // 处理流程：
-    //   1. 屏幕下半部分 + MLKIT OCR 识别「立即领取」并点击
-    //   2. 滑动浏览，最长 _AD_BROWSE_SECONDS 秒
-    //   3. 屏幕上方出现 "恭喜完成所有任务" 则提前结束
-    //   4. 返回浇水页面，继续浇水
-    //   5. markTaskDone("全屏广告2400") 标记今日已完成，当天不再重复 OCR 检测
+    //   1. 屏幕 20%~90% 高度区域一次截图 + OCR，批量比对「2400」+「立即领取」，都命中才点击
+    //   2. 滑动浏览，最长 _AD_BROWSE_SECONDS 秒，出现 "恭喜完成所有任务" 则提前结束
+    //   3. 返回浇水页面，继续浇水
+    //   4. markTaskDone("全屏广告2400") 标记今日已完成，当天不再重复 OCR 检测
     // ============================================================
 
     var _AD_BROWSE_SECONDS = 100;     // 广告浏览页最长浏览时长（秒）
 
-    /** 广告弹框「立即领取」识别区域：屏幕下半部分 */
-    var _AD_CLICK_REGION = [0, Math.floor(device.height * 0.5), device.width, Math.floor(device.height * 0.5)];
+    /** 广告弹框识别区域：屏幕 20%~90% 高度（高度 70%） */
+    var _AD_SCAN_REGION = [0, Math.floor(device.height * 0.2), device.width, Math.floor(device.height * 0.7)];
 
     /**
      * 检测并处理浇水过程中弹出的广告弹框（每天只处理一次）
      *
      * 参照「逛精选商品」模式：OCR_DEFS 配置 + ocrRecognize/ocrFindClick 调用 + hasDoneToday 标记。
      *
-     * 弹框在当前页面弹出，必须点击「立即领取」才能进入广告浏览页：
-     *   在 OCR_DEFS「立即领取」默认配置的基础上，调用处临时覆盖为
-     *   region = 屏幕下半部分、method = MLKIT_OCR（不改动 OCR_DEFS 本身）。
+     * 判定为广告弹框需同时满足（普通弹窗如「亲密度」弹窗只有「立即领取」，无「2400」）：
+     *   1. 屏幕 20%~90% 高度区域识别到「2400」字样
+     *   2. 同区域识别到「立即领取」按钮
+     * 为省一次识别，只截图 + OCR 一次（ocrCaptureAll），再用 findTextInOcrResults 复用同一份结果比对两字。
+     * 两者都命中才点击「立即领取」进入广告浏览页（不改动 OCR_DEFS 本身，仅调用处覆盖 region）。
      *
      * @returns {boolean} true=检测到广告并已处理；false=未检测到广告或今日已处理过
      */
@@ -85,17 +90,26 @@ module.exports = function (runtime, scope) {
         // 每天只处理一次：已标记完成则直接跳过，不再 OCR（同「逛精选商品」）
         if (adHasDoneToday) return false;
 
-        // ---- 1. 下半屏识别「立即领取」并点击进入浏览页 ----
-        //   临时覆盖 region / method（其余属性仍沿用 OCR_DEFS 的默认值）
-        var clicked = ocrFindClick("立即领取", {
-            region: _AD_CLICK_REGION,
-            exactMatch:false
-        });
-        if (!clicked) {
-            log("【广告拦截】未检测到广告弹框（「立即领取」未命中），跳过");
+        // ---- 1. 一次截图 + OCR，批量比对「2400」+「立即领取」（两判据复用同一份结果，省一次识别）----
+        //   普通弹窗（如点「亲密度」打开的弹窗B）只有「立即领取」、没有「2400」，
+        //   仅凭「立即领取」会误判为广告 → 故要求「2400」与「立即领取」同时命中。
+        var adResults = ocrCaptureAll(_AD_SCAN_REGION, METHOD_PADDLE_OCR);
+        if (!adResults || adResults.length === 0) {
+            log("【广告拦截】OCR 无结果，跳过");
             return false;
         }
-        log("【广告拦截】检测到广告弹框，点击「立即领取」进入浏览页");
+        if (!findTextInOcrResults(adResults, "2400", false, false)) {
+            log("【广告拦截】未检测到「2400」字样，判定非广告弹框（如亲密度弹窗），跳过");
+            return false;
+        }
+        // 命中「立即领取」并点击（复用同一份 OCR 结果）
+        var hit = findTextInOcrResults(adResults, "立即领取", false, false);
+        if (!hit || !hit.bounds) {
+            log("【广告拦截】有「2400」但「立即领取」未命中，跳过");
+            return false;
+        }
+        log("【广告拦截】检测到广告弹框（2400 + 立即领取），点击「立即领取」进入浏览页");
+        clickWithOffset(hit.bounds, CLICK_OFFSET_X, CLICK_OFFSET_Y, 0, 0);
         randomSleep(2500);
 
         // ---- 2. 广告浏览页：滑动浏览，最长 _AD_BROWSE_SECONDS 秒 ----
