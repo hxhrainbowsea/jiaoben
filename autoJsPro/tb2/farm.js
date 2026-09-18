@@ -55,10 +55,10 @@ module.exports = function (runtime, scope) {
     // 全屏广告拦截（浇水过程中可能突然弹出广告，每天只处理一次）
     //
     // 模式：非强制跳转页面，而是在当前页面弹出广告弹框。
-    //   弹框必须点击「2400肥料」才会进入广告浏览页。
+    //   弹框必须点击「立即领取」才会进入广告浏览页。
     //
     // 处理流程：
-    //   1. PADDLE OCR + 中上区域（0.1 / 0.2 / 0.8 / 0.3）识别「2400肥料」并点击
+    //   1. 屏幕下半部分 + MLKIT OCR 识别「立即领取」并点击
     //   2. 滑动浏览，最长 _AD_BROWSE_SECONDS 秒
     //   3. 屏幕上方出现 "恭喜完成所有任务" 则提前结束
     //   4. 返回浇水页面，继续浇水
@@ -67,14 +67,17 @@ module.exports = function (runtime, scope) {
 
     var _AD_BROWSE_SECONDS = 100;     // 广告浏览页最长浏览时长（秒）
 
+    /** 广告弹框「立即领取」识别区域：屏幕下半部分 */
+    var _AD_CLICK_REGION = [0, Math.floor(device.height * 0.5), device.width, Math.floor(device.height * 0.5)];
+
     /**
      * 检测并处理浇水过程中弹出的广告弹框（每天只处理一次）
      *
      * 参照「逛精选商品」模式：OCR_DEFS 配置 + ocrRecognize/ocrFindClick 调用 + hasDoneToday 标记。
      *
-     * 新模式下弹框在当前页面弹出，必须点击「2400肥料」才能进入广告浏览页：
-     *   OCR_DEFS「2400肥料」= PADDLE + 中上区域（0.1/0.2/0.8/0.3），点击后进入浏览页。
-     *   无「识别B」双位置判定（新模式不会误跳进浏览页）。
+     * 弹框在当前页面弹出，必须点击「立即领取」才能进入广告浏览页：
+     *   在 OCR_DEFS「立即领取」默认配置的基础上，调用处临时覆盖为
+     *   region = 屏幕下半部分、method = MLKIT_OCR（不改动 OCR_DEFS 本身）。
      *
      * @returns {boolean} true=检测到广告并已处理；false=未检测到广告或今日已处理过
      */
@@ -82,14 +85,17 @@ module.exports = function (runtime, scope) {
         // 每天只处理一次：已标记完成则直接跳过，不再 OCR（同「逛精选商品」）
         if (adHasDoneToday) return false;
 
-        // ---- 1. 识别广告弹框「2400肥料」并点击进入浏览页 ----
-        //   OCR_DEFS「2400肥料」= PADDLE + 中上区域（0.1/0.2/0.8/0.3）
-        var clicked = ocrFindClick("2400肥料");
+        // ---- 1. 下半屏识别「立即领取」并点击进入浏览页 ----
+        //   临时覆盖 region / method（其余属性仍沿用 OCR_DEFS 的默认值）
+        var clicked = ocrFindClick("立即领取", {
+            region: _AD_CLICK_REGION,
+            exactMatch:false
+        });
         if (!clicked) {
-            log("【广告拦截】未检测到广告弹框（「2400肥料」未命中），跳过");
+            log("【广告拦截】未检测到广告弹框（「立即领取」未命中），跳过");
             return false;
         }
-        log("【广告拦截】检测到广告弹框，点击「2400肥料」进入浏览页");
+        log("【广告拦截】检测到广告弹框，点击「立即领取」进入浏览页");
         randomSleep(2500);
 
         // ---- 2. 广告浏览页：滑动浏览，最长 _AD_BROWSE_SECONDS 秒 ----

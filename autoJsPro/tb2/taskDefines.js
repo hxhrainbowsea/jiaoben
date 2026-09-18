@@ -345,7 +345,8 @@ module.exports = function (runtime, scope) {
                 once: true, noScroll: true,
                 condition: function () {
                     return !!getPackageName("汽车之家");
-                }
+                },
+                killAppAfter: "com.cubic.autohome"
             },
             {
                 name: "玩薅羊毛免费领取话费",
